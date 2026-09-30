@@ -20,7 +20,7 @@ Cohen's d +1.20).
 ```
 index.html style.css app.js   page, drawing, statistics, worker pool
 worker.js                      one Pyodide instance per Web Worker
-py/global_curv.py              the project's contour code (copied unchanged)
+py/global_curv.py              contour geometry (readable copy of the research code's functions; identical results)
 py/explorer.py                 the pipeline with its settings exposed
 data/rooms/manifest.json       per room: rating, round/square label, source, size, default score
 data/rooms/{photos,thumbs,normals}/

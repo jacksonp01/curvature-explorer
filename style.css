@@ -1,19 +1,19 @@
 :root {
   --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1f; --muted: #5f6368; --line: #dcdcd8; --accent: #0b5cad; --accent-text: #ffffff;
   --arc: #0072b2; --corner: #d55e00; --straight: #8a8a8a; --jagged: #e69f00; --none: #c8c8c8;
-  --round: #cc79a7; --square: #009e73; --sel: #1d1d1f;
+  --round: #cc79a7; --square: #009e73; --sel: #1d1d1f; --warn: #c62828; --warn-bg: #fdecea;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #151517; --panel: #1f1f22; --text: #ececec; --muted: #a0a0a6; --line: #34343a; --accent: #5aa2f0; --accent-text: #0b0b0c;
-    --arc: #56b4e9; --corner: #f07d3a; --straight: #9a9a9a; --jagged: #f0c040; --none: #555; --sel: #ffffff;
+    --arc: #56b4e9; --corner: #f07d3a; --straight: #9a9a9a; --jagged: #f0c040; --none: #555; --sel: #ffffff; --warn: #ff6b6b; --warn-bg: #3a1a1a;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #151517; --panel: #1f1f22; --text: #ececec; --muted: #a0a0a6; --line: #34343a; --accent: #5aa2f0; --accent-text: #0b0b0c;
-  --arc: #56b4e9; --corner: #f07d3a; --straight: #9a9a9a; --jagged: #f0c040; --none: #555; --sel: #ffffff;
+  --arc: #56b4e9; --corner: #f07d3a; --straight: #9a9a9a; --jagged: #f0c040; --none: #555; --sel: #ffffff; --warn: #ff6b6b; --warn-bg: #3a1a1a;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -23,7 +23,8 @@ h1 { margin: 0 0 4px; font-size: 1.6rem; letter-spacing: -0.01em; }
 h2 { font-size: 1.05rem; margin: 0; }
 .sub { margin: 0; color: var(--muted); max-width: 70ch; }
 .status { margin: 8px 0 0; font-size: 0.9rem; color: var(--muted); }
-.status.err { color: var(--corner); }
+.status.alert { display: inline-block; font-size: 1.2rem; font-weight: 700; color: var(--warn); background: var(--warn-bg);
+  border: 2px solid var(--warn); border-radius: 8px; padding: 8px 14px; max-width: 70ch; }
 main { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); align-items: start; gap: 16px; padding: 8px 16px 32px; max-width: 1400px; margin: 0 auto; }
 @media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); } }
 section, .results, .controls, .about { min-width: 0; }

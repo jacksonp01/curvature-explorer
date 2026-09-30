@@ -61,24 +61,25 @@ function startWorkers() {
   for (let i = 0; i < NW; i++) {
     const w = new Worker("worker.js", { type: "module" }); w.ready = false; w.busy = false; w.i = i;
     w.onmessage = (e) => onMessage(w, e.data);
-    w.onerror = (e) => setStatus(`Worker error: ${e.message}`, true);
+    w.onerror = (e) => setStatus(`Worker error: ${e.message}`, "error");
     S.workers.push(w);
   }
-  setStatus(`Loading Python in ${NW} browser workers (the first visit downloads about 40 MB)…`);
+  setStatus(`Python is still loading (${NW} browser workers; the first visit downloads about 40 MB and takes 20-30 s). Settings and Run work once it is ready.`, "loading");
 }
 function readyCount() { return S.workers.filter((w) => w.ready).length; }
 function onMessage(w, m) {
   if (m.type === "ready") {
     w.ready = true;
     const k = readyCount();
-    setStatus(k === NW ? "Ready. Change a setting to recompute the selected room; press Run to score every room."
-      : `Loading Python… ${k} of ${NW} workers ready.`);
+    if (k === NW) setStatus("Ready. Change a setting to recompute the selected room; press Run to score every room.", "ready");
+    else setStatus(`Python is still loading: ${k} of ${NW} workers ready. Settings and Run work once it is ready.`, "loading");
+    renderResults();
     if (w.i === 0) pump0(); else dispatch();
     return;
   }
-  if (m.type === "error" && !m.req) { setStatus(`Python failed to load: ${m.error}`, true); return; }
+  if (m.type === "error" && !m.req) { setStatus(`Python failed to load: ${m.error}`, "error"); return; }
   w.busy = false;
-  if (m.error) { setStatus(`Error on ${m.id}: ${m.error}`, true); console.error(m.error); }
+  if (m.error) { setStatus(`Error on ${m.id}: ${m.error}`, "error"); console.error(m.error); }
   else if (m.type === "preview") onPreview(m);
   else if (m.type === "normals") { S.normals[m.id] = toCanvas(m.result.rgba, S.byId[m.id]); if (m.id === S.sel) draw(); }
   else if (m.type === "score") onScore(m);
@@ -270,7 +271,9 @@ function renderResults() {
     <div class="ref">${isDef ? "defaults" : `defaults ${fmt(rv, digits)}`}</div></div>`;
   $("stats").innerHTML = tile("Pearson r", st?.r, ref.r, 3) + tile("Spearman ρ", st?.rho, ref.rho, 3) + tile("Round vs square d", st?.d, ref.d, 2);
   const runBtn = $("run");
-  if (!S.run || S.run.key !== key) { runBtn.textContent = complete ? "All rooms scored" : `Run on all ${S.rooms.length} rooms`; runBtn.disabled = complete; }
+  if (!S.run || S.run.key !== key) { const pyReady = S.workers.slice(1).some((w) => w.ready);
+    runBtn.textContent = complete ? "All rooms scored" : pyReady ? `Run on all ${S.rooms.length} rooms` : "Run (waiting for Python)";
+    runBtn.disabled = complete || !pyReady; }
   $("scatterNote").textContent = complete
     ? `Each dot is a room (${S.rooms.length}); click one to view it.${st.undefinedN ? ` ${st.undefinedN} rooms had no arc or corner points and take the mean score.` : ""}`
     : `These settings have scores for ${n} of ${S.rooms.length} rooms. Press Run to score the rest (the first run downloads the normal maps, about 410 MB). Grey dots: the default settings.`;
@@ -306,7 +309,11 @@ function select(id) {
   if (!S.photos[id]) { const img = new Image(); img.onload = () => { if (S.sel === id) draw(); }; img.src = `data/rooms/photos/${id}.jpg`; S.photos[id] = img; }
   draw(); roomInfo(); updateList(); renderResults(); requestPreview();
 }
-function setStatus(t, err = false) { const s = $("status"); s.textContent = t; s.classList.toggle("err", err); }
+// kind: "loading" or "error" show a large red banner; "ready" shows a quiet line
+function setStatus(text, kind = "ready") {
+  const s = $("status"); s.textContent = text;
+  s.classList.toggle("alert", kind !== "ready"); s.classList.toggle("err", kind === "error");
+}
 
 // ------------------------------------------------------------------ start
 async function main() {
@@ -321,4 +328,4 @@ async function main() {
   startWorkers();
   select([...S.rooms].sort((a, b) => b.rating - a.rating)[0].id);
 }
-main().catch((e) => setStatus(`Failed to start: ${e}`, true));
+main().catch((e) => setStatus(`Failed to start: ${e}`, "error"));
