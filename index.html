@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curvature Explorer</title>
+<meta name="description" content="Adjust a curvature measure (Marigold surface normals, Canny edges, A/A+C) in the browser and see how it changes each room's score and the correlation with people's curvedness ratings.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Curvature Explorer</h1>
+  <p class="sub">How curved does a room look? Change the measure's settings and see how the contours, the room's score and the
+    correlation with people's ratings change. Everything runs in your browser.</p>
+  <p id="status" class="status" role="status">Loading Python…</p>
+</header>
+
+<main>
+  <section class="viewer" aria-label="Selected room">
+    <div class="layers">
+      <label><input type="radio" name="base" value="photo" checked> Photo</label>
+      <label><input type="radio" name="base" value="normals"> Surface normals</label>
+      <label><input type="checkbox" id="showEdges"> Canny edges</label>
+      <label><input type="checkbox" id="showContours" checked> Labelled contours</label>
+      <label><input type="checkbox" id="dim" checked> Dim image</label>
+    </div>
+    <div class="canvasWrap"><canvas id="view"></canvas><div id="viewBusy" class="busy" hidden>computing…</div></div>
+    <ul class="legend" aria-label="Contour labels">
+      <li><span class="sw arc"></span>arc</li><li><span class="sw corner"></span>corner</li>
+      <li><span class="sw straight"></span>straight</li><li><span class="sw jagged"></span>jagged</li>
+      <li><span class="sw none"></span>no full window</li>
+    </ul>
+    <div id="roomInfo" class="roomInfo"></div>
+    <div class="listHead">
+      <h2>Rooms</h2>
+      <label>Sort <select id="sort">
+        <option value="rating">rating (most curved first)</option>
+        <option value="score">score (highest first)</option>
+        <option value="resid">misfit (largest first)</option>
+        <option value="name">name</option>
+      </select></label>
+    </div>
+    <ol id="rooms" class="rooms"></ol>
+  </section>
+
+  <section class="side" aria-label="Settings and results">
+    <form id="controls" class="controls" onsubmit="return false">
+      <fieldset><legend>1 · Surface normals</legend>
+        <p class="note">Marigold v1.1 normals, computed in advance for every photo (4 steps, ensemble 1, seed 0).</p>
+      </fieldset>
+      <fieldset id="cannyFs"><legend>2 · Canny edges (on each normal component)</legend></fieldset>
+      <fieldset id="aacFs"><legend>3 · A/A+C window classifier</legend></fieldset>
+      <div class="buttons">
+        <button type="button" id="reset">Reset to defaults</button>
+        <button type="button" id="run" class="primary">Run on all rooms</button>
+      </div>
+      <div id="progress" class="progress" hidden><div></div></div>
+    </form>
+
+    <div class="results">
+      <h2>Score vs rating</h2>
+      <div class="stats" id="stats"></div>
+      <svg id="scatter" role="img" aria-label="Scatter plot of score against curvedness rating"></svg>
+      <p class="note" id="scatterNote"></p>
+    </div>
+
+    <details class="about">
+      <summary>What the measure does</summary>
+      <p><b>Score = arc / (arc + corner).</b> Surface normals turn sharply where two surfaces meet, so edges in the normal map trace the
+        room's creases (wall–floor, wall–ceiling, furniture). Canny finds them in each of the three normal components; the edges are joined
+        into chains. Each chain is smoothed and walked with a window of <i>W</i> px: a window is <b>straight</b> if its tangent turns less
+        than the straight threshold, a <b>corner</b> if most of its turning happens in a quarter of the window, an <b>arc</b> if it turns
+        steadily in one direction, and <b>jagged</b> otherwise. A round room should have many arc points and few corner points.</p>
+      <p>The defaults are the measure called N in the project (Pearson r +0.667 with people's curvedness ratings over the 191 rooms).
+        Ratings: mean curvedness ratings from Vartanian et al. (2024) and Coburn et al. (2020). See the repository README for sources.</p>
+    </details>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
